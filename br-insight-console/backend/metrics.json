@@ -1,0 +1,340 @@
+{
+  "client": "H&M",
+  "bpo_partner": "BR (Building Reliability)",
+  "kpis": {
+    "fcr": 82.5,
+    "asa_seconds": 24,
+    "csat": 4.8,
+    "active_tickets": 124,
+    "daily_volume": 1450
+  },
+  "drilldown_analytics": {
+    "kpi-fcr": {
+      "labels": ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+      "values": [80.4, 81.2, 82.1, 81.6, 83.0, 82.8, 82.5],
+      "unit": "%"
+    },
+    "kpi-asa": {
+      "labels": ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+      "values": [31, 29, 28, 32, 25, 23, 24],
+      "unit": "s"
+    },
+    "kpi-csat": {
+      "labels": ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+      "values": [4.7, 4.8, 4.8, 4.7, 4.9, 4.9, 4.8],
+      "unit": "/5"
+    },
+    "kpi-volume": {
+      "labels": ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+      "values": [1200, 1350, 1280, 1450, 1600, 1100, 950],
+      "unit": " cases"
+    },
+    "kpi-active": {
+      "labels": ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+      "values": [101, 108, 117, 132, 141, 130, 124],
+      "unit": " tickets"
+    },
+    "tickets": {
+      "TECH-403": {
+        "labels": ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+        "values": [8, 12, 21, 34, 29, 14, 6],
+        "unit": " errors"
+      },
+      "HM-55420": {
+        "labels": ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+        "values": [16, 18, 20, 23, 27, 25, 22],
+        "unit": " cases"
+      },
+      "BILL-209": {
+        "labels": ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+        "values": [4, 7, 6, 9, 11, 8, 5],
+        "unit": " cases"
+      }
+    },
+    "products": {
+      "oversized-hoodie": {
+        "labels": ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+        "values": [4, 6, 5, 7, 8, 6, 6],
+        "unit": " complaints"
+      },
+      "denim-jacket": {
+        "labels": ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+        "values": [3, 4, 3, 4, 5, 4, 5],
+        "unit": " complaints"
+      },
+      "loyalty-card": {
+        "labels": ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+        "values": [10, 12, 16, 18, 20, 9, 4],
+        "unit": " complaints"
+      }
+    }
+  },
+  "interaction_volume": {
+    "labels": ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+    "values": [1200, 1350, 1280, 1450, 1600, 1100, 950],
+    "top_problems": [12, 15, 18, 20, 19, 14, 13]
+  },
+  "qa_compliance_trend": {
+    "labels": ["Sem 1", "Sem 2", "Sem 3", "Sem 4", "Sem 5", "Sem 6", "Sem 7"],
+    "values": [95, 96, 95, 96, 96, 97, 97],
+    "target": 95
+  },
+  "analytics": {
+    "complaints_by_type": {
+      "labels": ["sizing_fit", "delivery_delay", "payment_issue", "product_quality", "app_technical", "refund_request"],
+      "values": [42, 38, 29, 24, 31, 18]
+    },
+    "inquiries_by_category": {
+      "labels": ["order_tracking", "returns_process", "loyalty_program", "payment_methods", "sizing_advice", "account_access"],
+      "values": [320, 210, 180, 140, 120, 95]
+    },
+    "logistics_bottlenecks": {
+      "labels": ["orders_stuck_preparing", "carrier_delay", "address_validation", "inventory_sync", "customs_hold"],
+      "values": [46, 32, 21, 14, 9]
+    },
+    "refunds_returns": {
+      "labels": ["Sem 1", "Sem 2", "Sem 3", "Sem 4", "Sem 5", "Sem 6", "Sem 7"],
+      "refunds": [48, 52, 61, 55, 68, 59, 64],
+      "returns": [72, 78, 85, 81, 94, 88, 91]
+    },
+    "weekly_problems": {
+      "labels": ["sizing_fit", "delivery_delay", "app_technical", "problem_others"],
+      "values": [42, 38, 31, 71]
+    }
+  },
+  "escalation_email": "",
+  "team_messages": [
+    {
+      "id": "msg-cristian-403",
+      "sender": "Cristian Anillo",
+      "role_key": "tech_support_l2",
+      "role": "Tech Support L2",
+      "time": "17:42",
+      "unread": true,
+      "message_key": "teamMessageCristian403",
+      "message": "Hola equipo, acabo de revisar la cola de Nivel 2 y el volumen del Error 403 se estabilizó tras aplicar el parche, quedo atento a cualquier novedad."
+    }
+  ],
+  "active_critical_tickets": [
+    {
+      "id": "TECH-403",
+      "type": "technical_error_403",
+      "issue_key": "technical_error_403",
+      "issue": "Error 403: Loyalty Token Invalid at Checkout",
+      "channel_key": "mobile_app",
+      "channel": "Mobile App",
+      "severity": "CRITICAL",
+      "status_key": "pending_l2",
+      "status": "Pending L2 Resolution",
+      "owner_key": "owner_tech_l2",
+      "sla_minutes": 30,
+      "time_open": "18m"
+    },
+    {
+      "id": "HM-55420",
+      "type": "logistics_delay",
+      "issue_key": "logistics_delay",
+      "issue": "Delayed Shipment (Stuck on Order Preparing)",
+      "channel_key": "web_portal",
+      "channel": "Web Portal",
+      "severity": "MEDIUM",
+      "status_key": "escalated_logistics",
+      "status": "Escalated to Logistics",
+      "owner_key": "owner_logistics",
+      "sla_minutes": 120,
+      "time_open": "42m"
+    },
+    {
+      "id": "BILL-209",
+      "type": "payment_double_hold",
+      "issue_key": "payment_double_hold",
+      "issue": "Double Auth Hold on Credit Card Payment",
+      "channel_key": "phone",
+      "channel": "Phone",
+      "severity": "HIGH",
+      "status_key": "in_progress",
+      "status": "In Progress",
+      "owner_key": "owner_payments",
+      "sla_minutes": 45,
+      "time_open": "12m"
+    }
+  ],
+  "agent_performance": [
+    {"name": "Cristian Anillo", "role_key": "tech_support_l2", "role": "Tech Support L2", "aht_min": "4.2", "csat": 4.9, "status": "Active"},
+    {"name": "Gabriel Silva", "role_key": "team_leader", "role": "Team Leader", "aht_min": "3.8", "csat": 4.8, "status": "In Call"},
+    {"name": "Juan Salinas", "role_key": "supervisor", "role": "Supervisor", "aht_min": "3.5", "csat": 4.7, "status": "Monitoring"},
+    {"name": "Santiago Alemán", "role_key": "qa_director", "role": "QA Director", "aht_min": "4.0", "csat": 4.9, "status": "Evaluating"}
+  ],
+  "top_complaint_products": [
+    {"product": "Oversized Fit Cotton Hoodie", "category": "Apparel", "category_key": "apparel", "issue": "Sizing Discrepancy", "issue_key": "sizing_discrepancy", "returns": 42},
+    {"product": "Denim Jacket Regular Fit", "category": "Apparel", "category_key": "apparel", "issue": "Zipper Jamming", "issue_key": "zipper_jamming", "returns": 28},
+    {"product": "Loyalty Card Pass (App)", "category": "Digital", "category_key": "digital", "issue": "Token Auth Error 403", "issue_key": "token_auth_403", "returns": 89}
+  ],
+  "frequent_complaints": [
+    {
+      "key": "complaint_token_403",
+      "complaint": "Token de fidelidad no válido (Error 403)",
+      "solution_key": "solution_token_403",
+      "solution": "Re-sincronizar la sesión siguiendo SOP-TS-002 y validar el acceso con el cliente.",
+      "owner_key": "owner_tech_l2",
+      "owner": "Soporte técnico L2"
+    },
+    {
+      "key": "complaint_order_stuck",
+      "complaint": "Pedido detenido en preparación",
+      "solution_key": "solution_order_stuck",
+      "solution": "Consultar estado OMS/SAP y escalar a logística si supera 48 horas.",
+      "owner_key": "owner_logistics",
+      "owner": "Logística / soporte L1"
+    },
+    {
+      "key": "complaint_double_hold",
+      "complaint": "Retención duplicada en pago",
+      "solution_key": "solution_double_hold",
+      "solution": "Verificar autorizaciones con la pasarela antes de iniciar una devolución.",
+      "owner_key": "owner_payments",
+      "owner": "Pagos"
+    }
+  ],
+  "resolution_breakdown": [
+    {"label": "Resuelto en primer contacto", "value": 82.5},
+    {"label": "Escalado a soporte L2", "value": 12.5},
+    {"label": "Gestión logística / devolución", "value": 5}
+  ],
+  "technical_logs": [
+    {
+      "time": "18:20:01",
+      "level": "ERROR",
+      "message_key": "log_403_invalid",
+      "message": "Error 403: Loyalty Token Invalid en el servicio de fidelidad."
+    },
+    {
+      "time": "18:22:15",
+      "level": "WARN",
+      "message_key": "log_oms_latency",
+      "message": "Latencia superior a 1200 ms en la pasarela OMS/SAP."
+    },
+    {
+      "time": "18:25:30",
+      "level": "ERROR",
+      "message_key": "log_token_retry",
+      "message": "Reintento de autenticación de token fallido en H&M App."
+    },
+    {
+      "time": "18:28:44",
+      "level": "INFO",
+      "message_key": "log_ticket_assigned",
+      "message": "Ticket TECH-403 asignado a soporte técnico L2."
+    }
+  ],
+  "sops": [
+    {
+      "code": "SOP-TS-002",
+      "title_key": "sop_ts_002_title",
+      "title": "Protocolo de Desincronización de Token Loyalty (Error 403)",
+      "category_key": "sop_category_tech_l2",
+      "category": "Tech Support L2",
+      "owner_key": "owner_tech_l2",
+      "sla_minutes": 30,
+      "steps": "1. Verificar la identidad del cliente según el procedimiento autorizado. 2. Confirmar el estado de la sesión en la consola de soporte. 3. Invalidar el token vencido y solicitar una nueva sincronización. 4. Guiar al cliente para cerrar y abrir sesión. 5. Confirmar acceso y documentar el resultado."
+    },
+    {
+      "code": "SOP-LOG-001",
+      "title_key": "sop_log_001_title",
+      "title": "Protocolo de Rastreo Prioritario OMS/SAP (Paquetes Detenidos)",
+      "category_key": "sop_category_cs_l1",
+      "category": "Customer Support L1",
+      "owner_key": "owner_logistics",
+      "sla_minutes": 120,
+      "steps": "1. Verificar el número de pedido en OMS. 2. Consultar el estado del transportador y el registro SAP. 3. Si supera 48 horas en preparación, escalar a logística con prioridad. 4. Informar al cliente el siguiente paso y registrar la gestión."
+    },
+    {
+      "code": "SOP-PAY-003",
+      "title_key": "sop_pay_003_title",
+      "title": "Protocolo de Retención Duplicada en Pagos",
+      "category_key": "sop_category_payments",
+      "category": "Payments",
+      "owner_key": "owner_payments",
+      "sla_minutes": 45,
+      "steps": "1. Confirmar las dos autorizaciones en la pasarela de pagos. 2. Verificar que la orden no se haya capturado dos veces. 3. Solicitar la liberación de la retención duplicada al equipo de pagos. 4. Informar al cliente el tiempo de reversión (3 a 5 días hábiles). 5. Registrar el caso y confirmar el cierre con el cliente."
+    },
+    {
+      "code": "SOP-RET-004",
+      "title_key": "sop_ret_004_title",
+      "title": "Protocolo de Reembolsos y Devoluciones",
+      "category_key": "sop_category_returns",
+      "category": "Returns & Refunds",
+      "owner_key": "owner_returns",
+      "sla_minutes": 90,
+      "steps": "1. Validar el número de pedido y el motivo de la devolución. 2. Confirmar si el artículo está dentro del plazo legal de retracto. 3. Generar la etiqueta de devolución y registrar el motivo. 4. Confirmar el método de reembolso con el cliente. 5. Verificar el abono en el ciclo comprometido y cerrar el caso."
+    }
+  ],
+  "team_directory": [
+    { "name": "Camilo Castrillo", "role_key": "role_ops_director", "role": "Ops Director", "email": "camilo.castrillo@br-hm.com" },
+    { "name": "Santiago Alemán", "role_key": "role_qa_director_ceo", "role": "QA Director / CEO", "email": "santiago.aleman@br-hm.com" },
+    { "name": "Juan Salinas", "role_key": "role_supervisor", "role": "Supervisor", "email": "juan.salinas@br-hm.com" },
+    { "name": "Gabriel Silva", "role_key": "role_team_leader", "role": "Team Leader", "email": "gabriel.silva@br-hm.com" },
+    { "name": "Cristian Anillo", "role_key": "role_tech_support_l2", "role": "Tech Support L2", "email": "cristian.anillo@br-hm.com" }
+  ],
+  "ticket_knowledge": [
+    {
+      "id": "TECH-403",
+      "severity": "CRITICAL",
+      "title_key": "kb_tech403_title",
+      "title": "Error 403 · Desincronización del token Loyalty",
+      "desc_key": "kb_tech403_desc",
+      "desc": "El token de fidelidad queda desincronizado tras una actualización de la app y bloquea el pago en H&M Mobile.",
+      "tip_key": "kb_tech403_tip",
+      "tip": "Re-sincroniza la sesión con SOP-TS-002 antes de escalar; la mayoría de casos se resuelve en el primer contacto.",
+      "phrasing_key": "kb_tech403_phrasing"
+    },
+    {
+      "id": "HM-55420",
+      "severity": "HIGH",
+      "title_key": "kb_hm55420_title",
+      "title": "Pedido detenido en preparación (OMS/SAP)",
+      "desc_key": "kb_hm55420_desc",
+      "desc": "Pedidos de alta demanda retenidos en estado 'Preparing' por desfase entre OMS y SAP.",
+      "tip_key": "kb_hm55420_tip",
+      "tip": "Sigue SOP-LOG-001: valida en OMS y escala a logística si supera 48 horas.",
+      "phrasing_key": "kb_hm55420_phrasing"
+    },
+    {
+      "id": "BILL-209",
+      "severity": "HIGH",
+      "title_key": "kb_bill209_title",
+      "title": "Doble autorización en pasarela de pagos",
+      "desc_key": "kb_bill209_desc",
+      "desc": "Retenciones de cobro duplicadas en tarjetas durante campañas de rebajas.",
+      "tip_key": "kb_bill209_tip",
+      "tip": "Aplica SOP-PAY-003: confirma ambas autorizaciones antes de iniciar la devolución.",
+      "phrasing_key": "kb_bill209_phrasing"
+    }
+  ],
+  "customer_faq": [
+    {
+      "id": "sizing",
+      "question_key": "faq_sizing_q",
+      "question": "¿Cómo elijo mi talla correcta?",
+      "answer_key": "faq_sizing_a",
+      "answer": "Comparte la guía de tallas oficial y recomienda una talla según las medidas del cliente.",
+      "phrasing_key": "faq_sizing_phrasing"
+    },
+    {
+      "id": "digital_pass",
+      "question_key": "faq_digital_q",
+      "question": "¿Cómo activo mi tarjeta de fidelidad digital?",
+      "answer_key": "faq_digital_a",
+      "answer": "Indica iniciar sesión en la app, abrir la tarjeta de fidelidad y validar el token.",
+      "phrasing_key": "faq_digital_phrasing"
+    },
+    {
+      "id": "returns",
+      "question_key": "faq_returns_q",
+      "question": "¿Cómo devuelvo un artículo y cuándo recibo el reembolso?",
+      "answer_key": "faq_returns_a",
+      "answer": "Explica el plazo de retracto, la etiqueta de devolución y el ciclo de reembolso comprometido.",
+      "phrasing_key": "faq_returns_phrasing"
+    }
+  ]
+}

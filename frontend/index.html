@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BR Insight Console | H&M BPO Dashboard</title>
+  <meta name="theme-color" content="#0A192F">
+  <meta name="description" content="Consola ejecutiva de operaciones de soporte BR para H&M.">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="translations.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <section id="login-screen" class="login-screen" aria-labelledby="login-title">
+    <form id="login-form" class="login-card">
+      <img class="login-logo" src="assets/br-partner-logo.png" alt="BR Partner" data-i18n-alt="logoAlt">
+      <p class="eyebrow" data-i18n="loginTitle">BUILDING RELIABILITY · OPERACIONES H&amp;M</p>
+      <h1 id="login-title">BR <span>Insight</span></h1>
+      <p class="login-copy" data-i18n="loginCopy">Ingresa tu PIN de acceso de 4 dígitos para continuar al centro de operaciones.</p>
+      <label for="login-language" data-i18n="language">Idioma</label>
+      <select id="login-language" class="language-select" aria-label="Idioma" data-i18n-aria-label="language">
+        <option value="es">Español</option>
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="pt">Português</option>
+        <option value="zh">中文</option>
+        <option value="de">Deutsch</option>
+        <option value="it">Italiano</option>
+        <option value="nl">Nederlands</option>
+        <option value="sv">Svenska</option>
+      </select>
+      <label for="access-pin" data-i18n="pinLabel">PIN de acceso</label>
+      <input id="access-pin" name="pin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="one-time-code" placeholder="••••" required>
+      <p id="login-error" class="login-error" role="alert" hidden></p>
+      <button id="login-submit" class="btn-primary login-submit" type="submit" data-i18n="loginButton">Acceder al dashboard</button>
+      <span class="login-footnote" data-i18n="loginFoot">Acceso protegido · Consola operativa BR</span>
+    </form>
+  </section>
+
+  <div class="app-container" id="dashboard" hidden>
+    <!-- Sidebar / Navegación Lateral -->
+    <aside class="sidebar">
+      <div class="brand">
+        <img class="sidebar-logo" src="assets/br-partner-logo.png" alt="BR Partner" data-i18n-alt="logoAlt">
+        <div>
+          <h2>BR <span>Insight</span></h2>
+          <p data-i18n="brandTagline">Inteligencia de operaciones</p>
+        </div>
+      </div>
+      <nav class="nav-menu" role="tablist" aria-label="Secciones del dashboard" aria-orientation="vertical" data-i18n-aria-label="navLabel">
+        <button class="nav-btn active" id="nav-overview" role="tab" aria-selected="true" aria-controls="tab-overview" data-tab="overview"><span data-i18n="overview">Resumen ejecutivo</span><span>01</span></button>
+        <button class="nav-btn" id="nav-agents" role="tab" aria-selected="false" aria-controls="tab-agents" data-tab="agents" tabindex="-1"><span data-i18n="agents">Rendimiento de agentes</span><span>02</span></button>
+        <button class="nav-btn" id="nav-errors" role="tab" aria-selected="false" aria-controls="tab-errors" data-tab="errors" tabindex="-1"><span data-i18n="errors">Errores y registros técnicos</span><span>03</span></button>
+        <button class="nav-btn" id="nav-sales" role="tab" aria-selected="false" aria-controls="tab-sales" data-tab="sales" tabindex="-1"><span data-i18n="sales">Reclamos y productos</span><span>04</span></button>
+        <button class="nav-btn" id="nav-sops" role="tab" aria-selected="false" aria-controls="tab-sops" data-tab="sops" tabindex="-1"><span data-i18n="sops">Manual operativo</span><span>05</span></button>
+        <button class="nav-btn" id="nav-analytics" role="tab" aria-selected="false" aria-controls="tab-analytics" data-tab="analytics" tabindex="-1"><span data-i18n="analytics">Analítica operativa</span><span>06</span></button>
+      </nav>
+      <div class="user-badge">
+        <div class="user-avatar" id="user-initials" aria-hidden="true">SL</div>
+        <div><p class="user-name" id="user-name">Santiago Lopez Rubio</p><p class="role" id="user-role">CEO</p></div>
+        <span class="status-dot" aria-label="Sistema operativo" data-i18n-aria-label="systemStatus"></span>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top KPI Bar -->
+      <header class="page-heading">
+        <div>
+          <p class="eyebrow" data-i18n="opsEyebrow">BR / H&amp;M OPERATIONS</p>
+          <h1 data-i18n="dashboardTitle">Centro de operaciones</h1>
+          <p class="page-subtitle" data-i18n="dashboardSubtitle">Visibilidad ejecutiva del servicio y la experiencia de cliente.</p>
+        </div>
+        <div class="heading-actions">
+          <button id="logout-button" class="message-trigger" type="button" data-i18n="logout">Cerrar sesión</button>
+          <button id="open-messages" class="message-trigger" type="button" aria-controls="messages-drawer" aria-expanded="false">
+            <span data-i18n="messages">Mensajes</span> <span id="unread-count" class="unread-count">1</span>
+          </button>
+          <div class="live-indicator"><span class="status-dot"></span> <span data-i18n="liveData">Datos operativos</span></div>
+        </div>
+      </header>
+      <section class="top-kpi-bar" id="top-kpi-bar" aria-label="Indicadores clave" data-i18n-aria-label="kpiBarLabel">
+        <div class="kpi-card drilldown-trigger" tabindex="0" role="button" data-analysis-id="kpi-fcr" aria-label="Ver detalle de resolución al primer contacto" data-i18n-aria-label="exploreFcr">
+          <span class="kpi-title" data-i18n="kpiFcr">Resolución al primer contacto</span>
+          <h3 id="kpi-fcr">82.5%</h3>
+          <span class="kpi-sub green" data-i18n="targetFcr">Meta ≥ 80%</span>
+        </div>
+        <div class="kpi-card drilldown-trigger" tabindex="0" role="button" data-analysis-id="kpi-asa" aria-label="Ver detalle del tiempo medio de respuesta" data-i18n-aria-label="exploreAsa">
+          <span class="kpi-title" data-i18n="kpiAsa">Tiempo medio de respuesta</span>
+          <h3 id="kpi-asa">24s</h3>
+          <span class="kpi-sub green" data-i18n="targetAsa">Objetivo &lt; 30 s</span>
+        </div>
+        <div class="kpi-card drilldown-trigger" tabindex="0" role="button" data-analysis-id="kpi-csat" aria-label="Ver detalle de satisfacción de cliente" data-i18n-aria-label="exploreCsat">
+          <span class="kpi-title" data-i18n="kpiCsat">Satisfacción de cliente</span>
+          <h3 id="kpi-csat">4.8 / 5.0</h3>
+          <span class="kpi-sub cyan" data-i18n="targetCsat">Meta ≥ 4.8 / 5.0</span>
+        </div>
+        <div class="kpi-card drilldown-trigger" tabindex="0" role="button" data-analysis-id="kpi-volume" aria-label="Ver detalle del volumen de interacciones" data-i18n-aria-label="exploreVolume">
+          <span class="kpi-title" data-i18n="kpiVolume">Volumen diario</span>
+          <h3 id="kpi-volume">1,450</h3>
+          <span class="kpi-sub" data-i18n="interactionCount">Interacciones atendidas</span>
+        </div>
+        <div class="kpi-card drilldown-trigger" tabindex="0" role="button" data-analysis-id="kpi-active" aria-label="Ver detalle de tickets activos" data-i18n-aria-label="exploreActive">
+          <span class="kpi-title" data-i18n="kpiActive">Tickets activos</span>
+          <h3 id="kpi-active">124</h3>
+          <span class="kpi-sub" data-i18n="activeQueues">En todas las colas</span>
+        </div>
+      </section>
+
+      <!-- VISTA 1: OVERVIEW -->
+      <section id="tab-overview" class="tab-content active" role="tabpanel" aria-labelledby="nav-overview">
+        <div class="grid-two-columns">
+          <div class="panel">
+            <div class="panel-header">
+              <div><p class="eyebrow" data-i18n="aiEyebrow">INTELIGENCIA OPERATIVA</p><h2 data-i18n="aiTitle">Diagnóstico ejecutivo IA</h2></div>
+              <button id="btn-run-ai" class="btn-primary" data-i18n="aiRun">Ejecutar diagnóstico IA</button>
+            </div>
+            <div id="ai-response-box" class="ai-box" aria-live="polite" aria-atomic="true">
+              <span data-i18n="aiInitial">Ejecuta un diagnóstico para obtener recomendaciones basadas en los indicadores operativos actuales.</span>
+            </div>
+            <div id="ai-actions" class="ai-actions" hidden>
+              <button id="ai-case-detail" class="btn-quiet case-detail-btn" type="button" data-i18n="caseDetailButton">Ver detalle del caso</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-heading"><div><p class="eyebrow" data-i18n="weeklyTrend">TENDENCIA SEMANAL</p><h2 data-i18n="volumeErrors">Volumen y problemas frecuentes</h2></div><span class="chart-tag" data-i18n="last7Days">Últimos 7 días</span></div>
+            <div class="chart-wrap"><canvas id="chart-volume" aria-label="Gráfica de interacciones diarias y problemas frecuentes" data-i18n-aria-label="volumeChartLabel"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid-two-columns margin-top">
+          <section class="panel chat-panel" aria-labelledby="chat-title">
+            <div class="panel-heading">
+              <div><p class="eyebrow">GROQ CLOUD · GPT-OSS 20B</p><h2 id="chat-title" data-i18n="chatTitle">Asistente IA</h2></div>
+              <span class="chart-tag" data-i18n="chatBadge">Asesor operativo</span>
+            </div>
+            <div id="chat-messages" class="chat-messages" role="log" aria-live="polite" aria-label="Conversación con el asistente" data-i18n-aria-label="chatLogLabel">
+              <p class="chat-bubble assistant-bubble" data-i18n="chatWelcome">Hola. Puedo ayudarte a analizar casos H&amp;M, priorizar colas y consultar los indicadores actuales.</p>
+            </div>
+            <form id="chat-form" class="chat-form">
+              <label class="sr-only" for="chat-input" data-i18n="chatInputLabel">Pregunta para el asistente</label>
+              <textarea id="chat-input" rows="2" maxlength="2000" data-i18n-placeholder="chatPlaceholder" placeholder="Pregunta sobre casos, colas o indicadores…" required></textarea>
+              <button id="chat-submit" class="btn-primary" type="submit" aria-label="Enviar pregunta" data-i18n-aria-label="sendQuestionLabel" data-i18n="send">Enviar</button>
+            </form>
+            <p class="chat-disclaimer" data-i18n="privacy">Evita incluir datos personales de clientes en tus consultas.</p>
+          </section>
+          <section class="panel" aria-labelledby="qa-title">
+            <div class="panel-heading"><div><p class="eyebrow" data-i18n="qaEyebrow">CONTROL DE CALIDAD</p><h2 id="qa-title" data-i18n="qaTitle">Tendencia de cumplimiento QA</h2></div><span class="chart-tag" data-i18n="qaTarget">Meta ≥ 95%</span></div>
+            <div class="chart-wrap"><canvas id="chart-qa" aria-label="Tendencia semanal de cumplimiento QA" data-i18n-aria-label="qaChartLabel"></canvas></div>
+          </section>
+        </div>
+
+        <div class="panel margin-top">
+          <div class="panel-heading"><div><p class="eyebrow" data-i18n="priority">ATENCIÓN PRIORITARIA</p><h2 data-i18n="criticalTickets">Tickets críticos activos</h2></div><span class="chart-tag" data-i18n="serviceDesk">Mesa de servicio H&amp;M</span></div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th data-i18n="ticketId">ID Ticket</th>
+                <th data-i18n="issue">Incidente / descripción</th>
+                <th data-i18n="channel">Canal</th>
+                <th data-i18n="severity">Severidad</th>
+                <th data-i18n="status">Estado</th>
+                <th data-i18n="time">Tiempo</th>
+              </tr>
+            </thead>
+            <tbody id="tickets-table-body">
+              <!-- Cargado dinámicamente -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- VISTA 2: AGENTES -->
+      <section id="tab-agents" class="tab-content" role="tabpanel" aria-labelledby="nav-agents" hidden>
+        <div class="grid-two-columns">
+          <div class="panel">
+            <div class="panel-heading"><div><p class="eyebrow" data-i18n="capacity">CAPACIDAD Y CALIDAD</p><h2 data-i18n="teamPerformance">Rendimiento del equipo BR</h2></div></div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th data-i18n="agent">Agente</th>
+                  <th data-i18n="role">Rol</th>
+                  <th data-i18n="aht">AHT (min)</th>
+                  <th data-i18n="csat">CSAT</th>
+                  <th data-i18n="action">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="agents-table-body">
+                <!-- Cargado dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="panel">
+            <div class="panel-heading"><div><p class="eyebrow" data-i18n="serviceQuality">CALIDAD DE SERVICIO</p><h2 data-i18n="csatByAgent">CSAT y AHT por agente</h2></div></div>
+            <div class="chart-wrap chart-wrap-tall"><canvas id="chart-agents-csat" aria-label="Gráfica de CSAT por agente" data-i18n-aria-label="agentsChartLabel"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA 3: ERRORES & TECH LOGS -->
+      <section id="tab-errors" class="tab-content" role="tabpanel" aria-labelledby="nav-errors" hidden>
+        <div class="panel">
+          <div class="panel-header">
+            <div><p class="eyebrow" data-i18n="platform">PLATAFORMA H&amp;M MOBILE Y WEB</p><h2 data-i18n="techMonitor">Monitor de eventos técnicos</h2></div>
+            <button id="btn-apply-patch" class="btn-success" data-i18n="applyPatch">Simular parche SOP-TS-002</button>
+          </div>
+          <div id="patch-alert" class="alert-box hidden"></div>
+          <div class="log-terminal" id="log-terminal" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- VISTA 4: RECLAMACIONES & VENTAS -->
+      <section id="tab-sales" class="tab-content" role="tabpanel" aria-labelledby="nav-sales" hidden>
+        <div class="grid-two-columns">
+          <div class="panel">
+            <div class="panel-heading"><div><p class="eyebrow" data-i18n="productExperience">EXPERIENCIA DE PRODUCTO</p><h2 data-i18n="topComplaints">Productos con más reclamaciones</h2></div></div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th data-i18n="product">Producto</th>
+                  <th data-i18n="category">Categoría</th>
+                  <th data-i18n="frequentCause">Causa frecuente</th>
+                  <th data-i18n="returns">Devoluciones</th>
+                </tr>
+              </thead>
+              <tbody id="products-table-body">
+                <!-- Cargado dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="panel">
+            <div class="panel-heading"><div><p class="eyebrow" data-i18n="managementOutcome">RESULTADO DE GESTIÓN</p><h2 data-i18n="resolutionDistribution">Resolución exitosa</h2></div></div>
+            <div class="chart-wrap"><canvas id="chart-resolutions" aria-label="Gráfica de distribución de resoluciones" data-i18n-aria-label="resolutionsChartLabel"></canvas></div>
+          </div>
+        </div>
+        <div class="panel margin-top">
+          <div class="panel-heading"><div><p class="eyebrow" data-i18n="quickGuide">GUÍA RÁPIDA</p><h2 data-i18n="complaintsGuide">Motivos frecuentes y solución recomendada</h2></div></div>
+          <div class="table-scroll"><table class="data-table">
+            <thead><tr><th data-i18n="complaint">Motivo de contacto</th><th data-i18n="recommendedSolution">Solución recomendada</th><th data-i18n="responsibleQueue">Cola responsable</th></tr></thead>
+            <tbody id="complaints-table-body"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- VISTA 5: KNOWLEDGE BASE (SOPS) -->
+      <section id="tab-sops" class="tab-content" role="tabpanel" aria-labelledby="nav-sops" hidden>
+        <div class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow" data-i18n="knowledgeBase">BASE DE CONOCIMIENTO</p>
+              <h2 data-i18n="operatingManual">Manual operativo y procedimientos</h2>
+              <p class="page-subtitle" data-i18n="manualIntro">Guías paso a paso para resolver los casos más frecuentes. Sigue el flujo, revisa los consejos y deja tus notas operativas.</p>
+            </div>
+            <span class="chart-tag" data-i18n="brProtocols">Protocolos BR</span>
+          </div>
+          <label class="sr-only" for="sop-search" data-i18n="sopSearchLabel">Buscar procedimientos</label>
+          <input type="search" id="sop-search" class="search-input" data-i18n-placeholder="searchSops" placeholder="Buscar por código, tema o palabra clave…">
+          <div id="sops-container" class="sops-grid">
+            <!-- Cargado dinámicamente -->
+          </div>
+        </div>
+
+        <div class="panel margin-top">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow" data-i18n="frequentTicketsEyebrow">CASOS DE ALTO VOLUMEN</p>
+              <h2 data-i18n="frequentTickets">Tickets frecuentes</h2>
+            </div>
+            <span class="chart-tag" data-i18n="agentTip">Consejo para el agente</span>
+          </div>
+          <div id="ticket-knowledge" class="kb-grid">
+            <!-- Cargado dinámicamente -->
+          </div>
+        </div>
+
+        <div class="panel margin-top">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow" data-i18n="customerFaqEyebrow">GUIONES PARA EL AGENTE</p>
+              <h2 data-i18n="customerFaq">Preguntas frecuentes del cliente</h2>
+            </div>
+            <span class="chart-tag" data-i18n="recommendedPhrasing">Respuesta sugerida</span>
+          </div>
+          <div id="faq-container" class="kb-grid">
+            <!-- Cargado dinámicamente -->
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA 6: ANALÍTICA INTEGRAL -->
+      <section id="tab-analytics" class="tab-content" role="tabpanel" aria-labelledby="nav-analytics" hidden>
+        <div class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow" data-i18n="analyticsEyebrow">ANÁLISIS OPERATIVO INTEGRAL</p>
+              <h2 data-i18n="analyticsTitle">Analítica de operaciones</h2>
+              <p class="page-subtitle" data-i18n="analyticsSubtitle">Reclamos, consultas, logística, devoluciones, problemas frecuentes y cumplimiento QA en tiempo real.</p>
+            </div>
+            <span id="analytics-updated" class="chart-tag live-tag" data-live="true">—</span>
+          </div>
+          <div class="grid-two-columns">
+            <div class="panel">
+              <div class="panel-heading"><div><p class="eyebrow" data-i18n="productExperience">EXPERIENCIA DE PRODUCTO</p><h2 data-i18n="complaintsByType">Reclamos por tipo de producto</h2></div></div>
+              <div class="chart-wrap"><canvas id="chart-complaints" aria-label="Gráfica de reclamos por tipo de producto" data-i18n-aria-label="complaintsChartLabel"></canvas></div>
+            </div>
+            <div class="panel">
+              <div class="panel-heading"><div><p class="eyebrow" data-i18n="customerService">SERVICIO AL CLIENTE</p><h2 data-i18n="inquiriesByCategory">Consultas por categoría</h2></div></div>
+              <div class="chart-wrap"><canvas id="chart-inquiries" aria-label="Gráfica de consultas por categoría" data-i18n-aria-label="inquiriesChartLabel"></canvas></div>
+            </div>
+          </div>
+          <div class="grid-two-columns margin-top">
+            <div class="panel">
+              <div class="panel-heading"><div><p class="eyebrow" data-i18n="logistics">LOGÍSTICA</p><h2 data-i18n="logisticsBottlenecks">Cuellos de botella logísticos</h2></div></div>
+              <div class="chart-wrap"><canvas id="chart-logistics" aria-label="Gráfica de cuellos de botella logísticos" data-i18n-aria-label="logisticsChartLabel"></canvas></div>
+            </div>
+            <div class="panel">
+              <div class="panel-heading"><div><p class="eyebrow" data-i18n="managementOutcome">RESULTADO DE GESTIÓN</p><h2 data-i18n="refundsReturns">Reembolsos y devoluciones</h2></div></div>
+              <div class="chart-wrap"><canvas id="chart-refunds" aria-label="Gráfica de reembolsos y devoluciones" data-i18n-aria-label="refundsChartLabel"></canvas></div>
+            </div>
+          </div>
+          <div class="panel margin-top">
+            <div class="panel-heading"><div><p class="eyebrow" data-i18n="problemsEyebrow">PROBLEMAS DE LA ÚLTIMA SEMANA</p><h2 data-i18n="technicalErrors">Problemas más frecuentes (última semana)</h2></div></div>
+            <div class="chart-wrap chart-wrap-tall"><canvas id="chart-technical-errors" aria-label="Gráfica de problemas frecuentes de la última semana" data-i18n-aria-label="problemsChartLabel"></canvas></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="drawer-backdrop" class="drawer-backdrop" hidden></div>
+  <aside id="messages-drawer" class="messages-drawer" aria-labelledby="messages-title" aria-hidden="true" hidden>
+    <div class="drawer-header">
+      <div><p class="eyebrow" data-i18n="communications">CENTRO DE COMUNICACIONES</p><h2 id="messages-title" data-i18n="mailTitle">Centro de mensajes</h2></div>
+      <button id="close-messages" class="drawer-close" type="button" aria-label="Cerrar mensajes" data-i18n-aria-label="closeMessagesLabel">×</button>
+    </div>
+    <div id="mail-toolbar" class="mail-toolbar" role="tablist" aria-label="Carpetas de mensajes" data-i18n-aria-label="mailFoldersLabel">
+      <button class="mail-tab is-active" type="button" role="tab" aria-selected="true" data-mail-view="inbox">
+        <span data-i18n="inboxTab">Bandeja de entrada</span>
+        <span id="inbox-count" class="mail-count">0</span>
+      </button>
+      <button class="mail-tab" type="button" role="tab" aria-selected="false" data-mail-view="sent">
+        <span data-i18n="sentTab">Enviados</span>
+        <span id="sent-count" class="mail-count is-quiet">0</span>
+      </button>
+      <button id="compose-open" class="btn-primary mail-compose-btn" type="button" data-i18n="composeAction">Redactar</button>
+    </div>
+    <div class="mail-scroll">
+      <div id="mail-inbox" class="mail-view is-active">
+        <div id="team-messages" class="team-messages"></div>
+      </div>
+      <div id="mail-sent" class="mail-view" hidden>
+        <div id="sent-messages" class="team-messages"></div>
+      </div>
+      <form id="message-compose" class="message-compose" hidden>
+        <div class="compose-head">
+          <p class="compose-title" data-i18n="composeMessage">Nuevo mensaje</p>
+          <button id="compose-close" class="compose-close" type="button" aria-label="Cerrar redacción" data-i18n-aria-label="composeCloseLabel">×</button>
+        </div>
+        <label class="sr-only" for="message-recipient" data-i18n="recipientLabel">Destinatario</label>
+        <select id="message-recipient" class="compose-select"></select>
+        <div id="recipient-chips" class="recipient-chips" aria-hidden="true"></div>
+        <label class="sr-only" for="message-subject" data-i18n="subjectPlaceholder">Asunto</label>
+        <input id="message-subject" class="compose-input" type="text" maxlength="120" data-i18n-placeholder="subjectPlaceholder" placeholder="Asunto (opcional)">
+        <label class="sr-only" for="message-body" data-i18n="messageLabel">Mensaje</label>
+        <textarea id="message-body" class="compose-textarea" rows="4" data-i18n-placeholder="messagePlaceholder" placeholder="Escribe tu mensaje para el equipo…"></textarea>
+        <div class="compose-actions">
+          <button id="send-message" class="btn-primary" type="submit" data-i18n="sendMessage">Enviar mensaje</button>
+          <button id="email-message" class="btn-quiet" type="button" data-i18n="sendByEmail">Enviar por email</button>
+        </div>
+      </form>
+    </div>
+    <a id="escalation-email" class="btn-primary email-action" href="mailto:" data-i18n="contactSuperiors">
+      Contactar a superiores por email
+    </a>
+  </aside>
+
+  <div id="analysis-backdrop" class="analysis-backdrop" hidden></div>
+  <section id="analysis-modal" class="analysis-modal" role="dialog" aria-modal="true" aria-labelledby="analysis-title" aria-hidden="true" hidden>
+    <div class="analysis-header">
+      <div><p class="eyebrow" data-i18n="drillHistorical">Historial y tendencia</p><h2 id="analysis-title"></h2></div>
+      <button id="close-analysis" class="drawer-close" type="button" aria-label="Cerrar" data-i18n-aria-label="close">×</button>
+    </div>
+    <div class="analysis-chart chart-wrap"><canvas id="chart-analysis" aria-label="Historial de tendencias" data-i18n-aria-label="analysisChartLabel"></canvas></div>
+    <div class="analysis-detail">
+      <section class="analysis-callout">
+        <h3 data-i18n="recommendation">Recomendación operativa asistida por IA</h3>
+        <p id="analysis-recommendation"></p>
+      </section>
+      <section class="analysis-callout impact-callout">
+        <h3 data-i18n="expectedImpact">Impacto KPI esperado</h3>
+        <p id="analysis-impact"></p>
+      </section>
+    </div>
+    <div class="action-plan">
+      <section class="action-card issues-card">
+        <h3 class="action-title" data-i18n="problemsTitle">Problemas a reparar</h3>
+        <ul id="analysis-issues" class="action-list"></ul>
+      </section>
+      <section class="action-card fixes-card">
+        <h3 class="action-title" data-i18n="fixesTitle">Cómo reparar</h3>
+        <ul id="analysis-fixes" class="action-list"></ul>
+      </section>
+    </div>
+    <h3 class="action-heading" data-i18n="aiAnalysisTitle">Análisis generado por IA</h3>
+    <div id="ai-analysis-response" class="ai-analysis-response" aria-live="polite"></div>
+    <div id="analysis-actions" class="ai-actions" hidden>
+      <button id="analysis-case-detail" class="btn-quiet case-detail-btn" type="button" data-i18n="caseDetailButton">Ver detalle del caso</button>
+    </div>
+  </section>
+
+  <div id="case-backdrop" class="analysis-backdrop" hidden></div>
+  <section id="case-modal" class="case-modal" role="dialog" aria-modal="true" aria-labelledby="case-modal-title" aria-hidden="true" hidden>
+    <div class="analysis-header">
+      <div>
+        <p class="eyebrow" data-i18n="caseEyebrow">EXPEDIENTE OPERATIVO</p>
+        <h2 id="case-modal-title">—</h2>
+      </div>
+      <button id="close-case" class="drawer-close" type="button" aria-label="Cerrar" data-i18n-aria-label="close">×</button>
+    </div>
+    <div id="case-modal-body" class="case-modal-body" aria-live="polite"></div>
+  </section>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden>
+    <span id="toast-message"></span>
+    <button id="toast-close" type="button" aria-label="Cerrar" data-i18n-aria-label="close">×</button>
+  </div>
+</body>
+</html>
