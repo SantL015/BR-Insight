@@ -16,6 +16,8 @@ let analysisOpener = null;
 let caseOpener = null;
 let activeCaseId = null;
 let activeCaseData = null;
+let agentOpener = null;
+let activeAgentData = null;
 let liveTimer = null;
 let liveIntervalMs = 0;
 let lastSimTicketId = null;
@@ -136,9 +138,13 @@ function applyLanguage(language) {
   if (document.getElementById("case-modal").classList.contains("is-open") && activeCaseData) {
     renderCaseDetail(activeCaseData);
   }
+  if (document.getElementById("agent-modal").classList.contains("is-open") && activeAgentData) {
+    renderAgentMonthly(activeAgentData);
+  }
 
   if (metricsData) {
     renderTicketsTable(metricsData.active_critical_tickets || []);
+    renderLiveProblems(metricsData.live_problems);
     renderAgentsTable(metricsData.agent_performance || []);
     renderProductsTable(metricsData.top_complaint_products || []);
     renderComplaints(metricsData.frequent_complaints || []);
@@ -329,6 +335,7 @@ function renderMetrics(data) {
   }
 
   renderTicketsTable(data.active_critical_tickets || []);
+  renderLiveProblems(data.live_problems);
   renderAgentsTable(data.agent_performance || []);
   renderProductsTable(data.top_complaint_products || []);
   renderComplaints(data.frequent_complaints || []);
@@ -342,11 +349,17 @@ function renderMetrics(data) {
 }
 
 function refreshLiveStamp() {
+  const time = new Date().toLocaleTimeString(activeLanguage === "zh" ? "zh-CN" : activeLanguage);
   const stamp = document.getElementById("analytics-updated");
-  if (!stamp) return;
-  const time = stamp.dataset.stamp || new Date().toLocaleTimeString(activeLanguage === "zh" ? "zh-CN" : activeLanguage);
-  stamp.dataset.stamp = time;
-  stamp.textContent = `${t("updatedJustNow")} · ${time}`;
+  if (stamp) {
+    stamp.dataset.stamp = stamp.dataset.stamp || time;
+    stamp.textContent = `${t("updatedJustNow")} · ${stamp.dataset.stamp}`;
+  }
+  const liveStamp = document.getElementById("live-problems-stamp");
+  if (liveStamp) {
+    liveStamp.dataset.stamp = liveStamp.dataset.stamp || time;
+    liveStamp.textContent = `${t("liveProblemsUpdated")} · ${liveStamp.dataset.stamp}`;
+  }
 }
 
 function updateKpiStatus(kpis, data) {
@@ -366,9 +379,10 @@ function updateKpiStatus(kpis, data) {
     (ticket.severity === "CRITICAL" || ticket.severity_key === "critical")
     && !/resolved|closed/i.test(`${ticket.status_key || ""} ${ticket.status || ""}`)
   );
-  const problemCounts = data.interaction_volume?.top_problems || [];
-  const latestProblemCount = Number(problemCounts[problemCounts.length - 1] || 0);
-  const hasProblemSpike = latestProblemCount > 20;
+  const liveProblems = data.live_problems?.items || [];
+  const hasProblemSpike = liveProblems.some((item) =>
+    (item.severity === "CRITICAL" || item.severity === "HIGH") && Number(item.count) >= 2
+  );
   const activeCard = document.getElementById("kpi-active")?.closest(".kpi-card");
   const liveIndicator = document.querySelector(".live-indicator");
   if (activeCard) {
@@ -463,10 +477,63 @@ function renderAgentsTable(agents) {
       <td data-label="${escapeHtml(t("role"))}">${escapeHtml(dynamic("role_", agent.role_key, agent.role))}</td>
       <td data-label="${escapeHtml(t("aht"))}">${escapeHtml(agent.aht_min)} min</td>
       <td data-label="${escapeHtml(t("csat"))}"><span class="score">${escapeHtml(agent.csat)} / 5</span></td>
-      <td data-label="${escapeHtml(t("action"))}"><button class="btn-quiet feedback-btn" type="button" data-agent="${escapeHtml(agent.name)}">${escapeHtml(t("sentFeedback"))}</button></td>
+      <td data-label="${escapeHtml(t("agentReport"))}"><button class="btn-quiet agent-performance-btn" type="button" data-agent="${escapeHtml(agent.name)}">${escapeHtml(t("agentViewPerformance"))}</button></td>
     </tr>
   `).join("") : emptyRow(5, t("emptyAgents"));
   tbody.dataset.agentCount = String(agents.length);
+}
+
+const LIVE_PROBLEM_COLORS = ["#FF5370", "#FFB86C", "#00D2FF", "#64FFDA", "#B388FF", "#8892B0"];
+
+// "Frequent problems IN THE MOMENT": agrupa todos los tickets activos por motivo.
+function renderLiveProblems(live) {
+  const list = document.getElementById("live-problems-list");
+  const meta = document.getElementById("live-problems-meta");
+  const stamp = document.getElementById("live-problems-stamp");
+  const items = (live?.items || []).slice(0, LIVE_PROBLEM_COLORS.length);
+  const total = Number(live?.total || 0);
+  const time = new Date().toLocaleTimeString(activeLanguage === "zh" ? "zh-CN" : activeLanguage);
+
+  if (stamp) {
+    stamp.dataset.stamp = time;
+    stamp.textContent = `${t("liveProblemsUpdated")} · ${time}`;
+  }
+  if (meta) {
+    meta.textContent = total
+      ? t("liveProblemsMeta")
+        .replace("{count}", numberFormatter.format(items.length))
+        .replace("{total}", numberFormatter.format(total))
+      : t("liveProblemsEmpty");
+  }
+  if (list) {
+    list.innerHTML = items.length ? items.map((item) => {
+      const share = Number(item.share) || 0;
+      return `
+      <li class="live-problem">
+        <div class="live-problem-head">
+          <span class="live-problem-name">${escapeHtml(dynamic("case_type_", item.key, item.key))}</span>
+          <span class="live-problem-count">${escapeHtml(numberFormatter.format(item.count))} · ${escapeHtml(String(share))}%</span>
+        </div>
+        <span class="live-problem-bar" aria-hidden="true"><span style="width:${Math.max(6, share)}%"></span></span>
+      </li>`;
+    }).join("") : `<li class="empty-state">${escapeHtml(t("liveProblemsEmpty"))}</li>`;
+  }
+
+  if (typeof Chart === "undefined" || !document.getElementById("chart-live-problems")) return;
+  createChart("chart-live-problems", {
+    type: "doughnut",
+    data: {
+      labels: items.map((item) => dynamic("case_type_", item.key, item.key)),
+      datasets: [{
+        data: items.map((item) => item.count),
+        backgroundColor: items.map((item, index) => LIVE_PROBLEM_COLORS[index % LIVE_PROBLEM_COLORS.length]),
+        borderColor: "#112240",
+        borderWidth: 4,
+        hoverOffset: 8
+      }]
+    },
+    options: chartOptions({ cutout: "66%" })
+  });
 }
 
 function renderProductsTable(products) {
@@ -1127,7 +1194,174 @@ function renderCaseDetail(caseData) {
       ${resolutionTitle ? `<p class="case-sub">${escapeHtml(resolutionTitle)}</p>` : ""}
       <ol class="case-steps">${steps || "<li>—</li>"}</ol>
     </section>
+    <section class="case-section case-review" data-family="${escapeHtml(CASE_REVIEW_FAMILY[caseData.type] || "product")}" data-case-type="${escapeHtml(caseData.type || "generic")}">
+      <div class="case-review-head">
+        <h3>${escapeHtml(t("caseReviewTitle"))}</h3>
+        <span class="case-review-badge">${escapeHtml(t(`case_type_${caseData.type}`))}</span>
+      </div>
+      <div id="case-review-body" class="ai-analysis-response case-review-body" aria-live="polite">
+        <p class="case-loading">${escapeHtml(t("caseReviewLoading"))}</p>
+      </div>
+    </section>
   `;
+  loadCaseReview(caseData);
+}
+
+// Familia operativa de cada tipo de caso: define la interfaz visual de la revisión IA.
+const CASE_REVIEW_FAMILY = {
+  technical_error_403: "technical", app_crash: "technical",
+  logistics_delay: "logistics", shipping_address: "logistics",
+  payment_double_hold: "finance", refund_pending: "finance",
+  qa_review: "quality", product_inquiry: "product"
+};
+
+// Carga la revisión operativa ampliada generada por IA para el expediente abierto.
+async function loadCaseReview(caseData) {
+  if (!caseData?.id) return;
+  const container = document.getElementById("case-review-body");
+  if (!container) return;
+  try {
+    const data = await requestJson(`/api/case/${encodeURIComponent(caseData.id)}/review?language=${encodeURIComponent(activeLanguage)}`);
+    if (document.getElementById("case-review-body") !== container) return;
+    const text = data.review || (data.review_key ? t(data.review_key) : "");
+    container.classList.toggle("is-fallback", data.source === "intelligent-fallback");
+    renderAiInsight(container, text || t("caseReviewError"));
+  } catch (error) {
+    if (document.getElementById("case-review-body") !== container) return;
+    container.classList.add("is-fallback");
+    renderAiInsight(container, t("caseReviewError"));
+  }
+}
+
+/* ------------------------------------------------ rendimiento mensual --- */
+
+function agentMetricCard(labelKey, value) {
+  return `
+    <div class="agent-metric">
+      <span class="agent-metric-label">${escapeHtml(t(labelKey))}</span>
+      <strong class="agent-metric-value">${escapeHtml(value)}</strong>
+    </div>`;
+}
+
+function renderAgentMonthly(data) {
+  if (!data) return;
+  setText("agent-modal-title", data.name || "—");
+  setText("agent-modal-role", `${dynamic("role_", data.role_key, data.role)} · ${t("agentPeriodLabel")}`);
+
+  const metrics = data.metrics || {};
+  const grid = document.getElementById("agent-monthly-metrics");
+  if (grid) {
+    grid.innerHTML = [
+      agentMetricCard("agentMetricCsat", `${metrics.csat ?? "—"} / 5`),
+      agentMetricCard("agentMetricAht", `${metrics.aht_min ?? "—"} min`),
+      agentMetricCard("agentMetricFcr", `${metrics.fcr_pct ?? "—"}%`),
+      agentMetricCard("agentMetricQa", `${metrics.qa_pct ?? "—"}%`),
+      agentMetricCard("agentMetricTickets", numberFormatter.format(metrics.tickets_handled ?? 0)),
+      agentMetricCard("agentMetricAdherence", `${metrics.adherence_pct ?? "—"}%`),
+      agentMetricCard("agentMetricOccupancy", `${metrics.occupancy_pct ?? "—"}%`),
+      agentMetricCard("agentMetricRepeat", `${metrics.repeat_contact_pct ?? "—"}%`)
+    ].join("");
+  }
+
+  const trend = data.trend || {};
+  if (typeof Chart !== "undefined" && document.getElementById("chart-agent-monthly")) {
+    createChart("chart-agent-monthly", {
+      type: "line",
+      data: {
+        labels: translatePeriodLabels((data.weeks || [1, 2, 3, 4]).map((week) => `Sem ${week}`)),
+        datasets: [{
+          label: `${t("csat")} / 5`,
+          data: trend.csat || [],
+          borderColor: "#00D2FF",
+          backgroundColor: "rgba(0, 210, 255, .12)",
+          fill: true,
+          tension: 0.34,
+          pointRadius: 3,
+          yAxisID: "y"
+        }, {
+          label: t("aht"),
+          data: trend.aht || [],
+          borderColor: "#FFB86C",
+          backgroundColor: "rgba(255, 184, 108, .12)",
+          fill: false,
+          tension: 0.34,
+          pointRadius: 3,
+          yAxisID: "y"
+        }, {
+          label: `${t("qaTitle")} (%)`,
+          data: trend.qa || [],
+          borderColor: "#64FFDA",
+          backgroundColor: "rgba(100, 255, 218, .1)",
+          fill: false,
+          tension: 0.34,
+          pointRadius: 3,
+          yAxisID: "y1"
+        }]
+      },
+      options: chartOptions({
+        scales: {
+          x: { ticks: { color: "#8892B0" }, grid: { color: "rgba(136,146,176,.1)" } },
+          y: { beginAtZero: true, max: 6, position: "left", ticks: { color: "#8892B0" }, grid: { color: "rgba(136,146,176,.1)" } },
+          y1: { min: 85, max: 100, position: "right", ticks: { color: "#64FFDA", callback: (value) => `${value}%` }, grid: { drawOnChartArea: false } }
+        }
+      })
+    });
+  }
+
+  const plan = document.getElementById("agent-monthly-plan");
+  if (plan) {
+    const highlightItems = (data.highlights || []).map((key) => `<li>${escapeHtml(t(key))}</li>`).join("");
+    const focusItems = (data.focus || []).map((key) => `<li>${escapeHtml(t(key))}</li>`).join("");
+    plan.innerHTML = `
+      <section class="agent-plan-card is-positive">
+        <h4>${escapeHtml(t("agentHighlights"))}</h4>
+        <ul>${highlightItems}</ul>
+      </section>
+      <section class="agent-plan-card is-attention">
+        <h4>${escapeHtml(t("agentFocus"))}</h4>
+        <ul>${focusItems}</ul>
+      </section>`;
+  }
+}
+
+async function openAgentPerformance(agentName, opener) {
+  if (!agentName) return;
+  const modal = document.getElementById("agent-modal");
+  if (!modal.classList.contains("is-open")) agentOpener = opener || null;
+  modal.hidden = false;
+  modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden", "false");
+  document.getElementById("agent-backdrop").hidden = false;
+  setText("agent-modal-title", agentName);
+  setText("agent-modal-role", t("agentMonthlyTitle"));
+  const grid = document.getElementById("agent-monthly-metrics");
+  if (grid) grid.innerHTML = `<p class="case-loading">${escapeHtml(t("agentPerformanceLoading"))}</p>`;
+  const plan = document.getElementById("agent-monthly-plan");
+  if (plan) plan.innerHTML = "";
+  document.getElementById("close-agent").focus();
+
+  try {
+    const data = await requestJson(`/api/agent/${encodeURIComponent(agentName)}/performance`);
+    if (!modal.classList.contains("is-open")) return;
+    activeAgentData = data;
+    renderAgentMonthly(data);
+  } catch (error) {
+    const errorBox = document.getElementById("agent-monthly-metrics");
+    if (errorBox) errorBox.innerHTML = `<p class="case-error">${escapeHtml(t("agentPerformanceError"))}</p>`;
+  }
+}
+
+function closeAgentPerformance() {
+  const modal = document.getElementById("agent-modal");
+  modal.classList.remove("is-open");
+  modal.setAttribute("aria-hidden", "true");
+  document.getElementById("agent-backdrop").hidden = true;
+  window.setTimeout(() => {
+    if (!modal.classList.contains("is-open")) modal.hidden = true;
+  }, 190);
+  agentOpener?.focus();
+  agentOpener = null;
+  activeAgentData = null;
 }
 
 /* ---------------------------------------------------------- interactivo --- */
@@ -1152,6 +1386,8 @@ function setupEventListeners() {
   document.getElementById("analysis-backdrop").addEventListener("click", closeAnalysis);
   document.getElementById("close-case").addEventListener("click", closeCaseDetail);
   document.getElementById("case-backdrop").addEventListener("click", closeCaseDetail);
+  document.getElementById("close-agent").addEventListener("click", closeAgentPerformance);
+  document.getElementById("agent-backdrop").addEventListener("click", closeAgentPerformance);
 
   // Botones "Ver detalle del caso" (diagnóstico IA, chat y modal de análisis).
   document.addEventListener("click", (event) => {
@@ -1284,9 +1520,9 @@ function setupEventListeners() {
   });
 
   document.getElementById("agents-table-body").addEventListener("click", (event) => {
-    const button = event.target.closest(".feedback-btn");
+    const button = event.target.closest(".agent-performance-btn");
     if (!button) return;
-    showToast(`${t("sentFeedback")}: ${button.dataset.agent}.`, "success");
+    openAgentPerformance(button.dataset.agent, button);
   });
 
   document.getElementById("toast-close").addEventListener("click", hideToast);
@@ -1576,44 +1812,9 @@ function initCharts(data) {
     return;
   }
 
-  const volume = data.interaction_volume || { labels: [], values: [] };
-  const topProblems = volume.top_problems || [];
   const agents = data.agent_performance || [];
   const resolutions = data.resolution_breakdown || [];
   const qa = data.qa_compliance_trend || { labels: [], values: [], target: 95 };
-
-  createChart("chart-volume", {
-    type: "line",
-    data: {
-      labels: translatePeriodLabels(volume.labels),
-      datasets: [{
-        label: t("volumeErrors"),
-        data: volume.values,
-        borderColor: "#00D2FF",
-        backgroundColor: "rgba(0, 210, 255, 0.12)",
-        fill: true,
-        tension: 0.35,
-        pointRadius: 3,
-        pointHoverRadius: 6
-      }, {
-        label: t("topProblems"),
-        data: topProblems,
-        yAxisID: "y1",
-        borderColor: "#FF5370",
-        backgroundColor: "rgba(255, 83, 112, 0.12)",
-        tension: 0.3,
-        pointRadius: 3,
-        pointHoverRadius: 6
-      }]
-    },
-    options: chartOptions({
-      scales: {
-        x: { ticks: { color: "#8892B0" }, grid: { color: "rgba(136,146,176,.1)" } },
-        y: { beginAtZero: true, position: "left", ticks: { color: "#8892B0" }, grid: { color: "rgba(136,146,176,.1)" } },
-        y1: { beginAtZero: true, position: "right", ticks: { color: "#FF879A" }, grid: { drawOnChartArea: false } }
-      }
-    })
-  });
 
   createChart("chart-agents-csat", {
     type: "bar",

@@ -125,8 +125,17 @@
           </div>
 
           <div class="panel">
-            <div class="panel-heading"><div><p class="eyebrow" data-i18n="weeklyTrend">TENDENCIA SEMANAL</p><h2 data-i18n="volumeErrors">Volumen y problemas frecuentes</h2></div><span class="chart-tag" data-i18n="last7Days">Últimos 7 días</span></div>
-            <div class="chart-wrap"><canvas id="chart-volume" aria-label="Gráfica de interacciones diarias y problemas frecuentes" data-i18n-aria-label="volumeChartLabel"></canvas></div>
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow" data-i18n="liveProblemsEyebrow">PROBLEMAS EN TIEMPO REAL</p>
+                <h2 data-i18n="liveProblemsTitle">Frequent problems IN THE MOMENT</h2>
+              </div>
+              <span id="live-problems-stamp" class="chart-tag live-tag" data-live="true">—</span>
+            </div>
+            <p class="panel-hint" data-i18n="liveProblemsHint">Motivos calculados con todos los tickets activos del sistema.</p>
+            <div class="chart-wrap"><canvas id="chart-live-problems" aria-label="Gráfica de problemas frecuentes en el momento" data-i18n-aria-label="liveProblemsChartLabel"></canvas></div>
+            <p id="live-problems-meta" class="live-problems-meta"></p>
+            <ul id="live-problems-list" class="live-problems-list"></ul>
           </div>
         </div>
 
@@ -184,7 +193,7 @@
                   <th data-i18n="role">Rol</th>
                   <th data-i18n="aht">AHT (min)</th>
                   <th data-i18n="csat">CSAT</th>
-                  <th data-i18n="action">Acción</th>
+                  <th data-i18n="agentReport">Informe mensual</th>
                 </tr>
               </thead>
               <tbody id="agents-table-body">
@@ -422,6 +431,26 @@
       <button id="close-case" class="drawer-close" type="button" aria-label="Cerrar" data-i18n-aria-label="close">×</button>
     </div>
     <div id="case-modal-body" class="case-modal-body" aria-live="polite"></div>
+  </section>
+
+  <div id="agent-backdrop" class="analysis-backdrop" hidden></div>
+  <section id="agent-modal" class="case-modal agent-modal" role="dialog" aria-modal="true" aria-labelledby="agent-modal-title" aria-hidden="true" hidden>
+    <div class="analysis-header">
+      <div>
+        <p class="eyebrow" data-i18n="agentMonthlyTitle">Rendimiento mensual</p>
+        <h2 id="agent-modal-title">—</h2>
+        <p id="agent-modal-role" class="page-subtitle"></p>
+      </div>
+      <button id="close-agent" class="drawer-close" type="button" aria-label="Cerrar" data-i18n-aria-label="close">×</button>
+    </div>
+    <div class="case-modal-body">
+      <div id="agent-monthly-metrics" class="agent-metrics" aria-live="polite"></div>
+      <section class="case-section">
+        <h3 data-i18n="agentMonthlyTrend">Tendencia mensual</h3>
+        <div class="chart-wrap chart-wrap-tall"><canvas id="chart-agent-monthly" aria-label="Tendencia mensual del agente" data-i18n-aria-label="agentChartLabel"></canvas></div>
+      </section>
+      <div id="agent-monthly-plan" class="agent-plan" aria-live="polite"></div>
+    </div>
   </section>
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden>

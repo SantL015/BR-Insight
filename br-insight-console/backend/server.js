@@ -12,6 +12,8 @@ const {
   generateChatResponse,
   getIntelligentFallback,
   buildCaseDetail,
+  buildCaseReview,
+  buildAgentMonthly,
   pickPriorityCase
 } = require("./groqController");
 
@@ -282,8 +284,37 @@ async function loadBaseMetrics() {
   return metrics;
 }
 
+// Agrupa todos los tickets activos por motivo para mostrarlos "en el momento".
+// El frontend localiza cada `key` con el prefijo case_type_.
+const SEVERITY_RANK = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+
+function computeLiveProblems(metrics) {
+  const tickets = metrics.active_critical_tickets || [];
+  const groups = new Map();
+  tickets.forEach((ticket) => {
+    const key = ticket.issue_key || ticket.type || "generic";
+    const entry = groups.get(key) || { key, count: 0, severity: ticket.severity || "MEDIUM", tickets: [] };
+    entry.count += 1;
+    entry.tickets.push(ticket.id);
+    if ((SEVERITY_RANK[ticket.severity] ?? 4) < (SEVERITY_RANK[entry.severity] ?? 4)) {
+      entry.severity = ticket.severity;
+    }
+    groups.set(key, entry);
+  });
+  const total = tickets.length;
+  const items = [...groups.values()]
+    .map((entry) => ({ ...entry, share: total ? Math.round((entry.count / total) * 1000) / 10 : 0 }))
+    .sort((left, right) => right.count - left.count
+      || (SEVERITY_RANK[left.severity] ?? 4) - (SEVERITY_RANK[right.severity] ?? 4));
+  return { total, updated_at: new Date().toISOString(), items };
+}
+
 async function readMetrics() {
-  if (!SIM_ENABLED) return loadBaseMetrics();
+  if (!SIM_ENABLED) {
+    const base = await loadBaseMetrics();
+    base.live_problems = computeLiveProblems(base);
+    return base;
+  }
 
   if (!liveMetrics) {
     liveMetrics = await loadBaseMetrics();
@@ -303,6 +334,7 @@ async function readMetrics() {
     }
   }
 
+  liveMetrics.live_problems = computeLiveProblems(liveMetrics);
   return liveMetrics;
 }
 
@@ -396,6 +428,41 @@ app.get("/api/case/:id", async (req, res) => {
   } catch (error) {
     console.error(`Error cargando el detalle del caso: ${error.message}`);
     res.status(500).json({ success: false, error: "No fue posible cargar el detalle del caso." });
+  }
+});
+
+app.get("/api/case/:id/review", async (req, res) => {
+  try {
+    const language = SUPPORTED_LANGUAGES.has(req.query.language) ? req.query.language : req.userSession.language;
+    const review = await buildCaseReview(await readMetrics(), req.params.id, language);
+    if (!review) {
+      return res.status(404).json({ success: false, errorKey: "caseUnavailable", error: "No se encontró el caso solicitado." });
+    }
+    res.json({ success: true, ...review });
+  } catch (error) {
+    console.error(`Error generando la revisión del caso: ${error.message}`);
+    res.status(500).json({
+      success: false,
+      errorKey: "caseReviewUnavailable",
+      error: "No fue posible generar la revisión del caso."
+    });
+  }
+});
+
+app.get("/api/agent/:name/performance", async (req, res) => {
+  try {
+    const name = decodeURIComponent(req.params.name || "");
+    if (!name.trim()) {
+      return res.status(400).json({ success: false, errorKey: "agentUnavailable", error: "Agente no válido." });
+    }
+    res.json({ success: true, ...buildAgentMonthly(await readMetrics(), name) });
+  } catch (error) {
+    console.error(`Error cargando el rendimiento del agente: ${error.message}`);
+    res.status(500).json({
+      success: false,
+      errorKey: "agentPerformanceUnavailable",
+      error: "No fue posible cargar el rendimiento del agente."
+    });
   }
 });
 

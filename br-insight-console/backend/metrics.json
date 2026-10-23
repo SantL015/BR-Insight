@@ -309,6 +309,50 @@
       "tip_key": "kb_bill209_tip",
       "tip": "Aplica SOP-PAY-003: confirma ambas autorizaciones antes de iniciar la devolución.",
       "phrasing_key": "kb_bill209_phrasing"
+    },
+    {
+      "id": "RET-004",
+      "severity": "MEDIUM",
+      "title_key": "kb_ret004_title",
+      "title": "Reembolso fuera del ciclo comprometido",
+      "desc_key": "kb_ret004_desc",
+      "desc": "Reembolsos que superan los 5 días hábiles comprometidos por validaciones del plazo de retracto o lotes recibidos incompletos.",
+      "tip_key": "kb_ret004_tip",
+      "tip": "Sigue SOP-RET-004: valida el pedido, genera la etiqueta y confirma el método de reembolso antes de prometer fechas.",
+      "phrasing_key": "kb_ret004_phrasing"
+    },
+    {
+      "id": "SIZE-118",
+      "severity": "MEDIUM",
+      "title_key": "kb_size118_title",
+      "title": "Discrepancia de talla en prendas oversize",
+      "desc_key": "kb_size118_desc",
+      "desc": "Reclamos recurrentes de talla en prendas de corte oversize y denim que generan cambios y devoluciones.",
+      "tip_key": "kb_size118_tip",
+      "tip": "Confirma la tabla de tallas del artículo y ofrece el cambio por la talla correcta antes de tramitar una devolución.",
+      "phrasing_key": "kb_size118_phrasing"
+    },
+    {
+      "id": "ADDR-330",
+      "severity": "HIGH",
+      "title_key": "kb_addr330_title",
+      "title": "Dirección de entrega rechazada por el transportador",
+      "desc_key": "kb_addr330_desc",
+      "desc": "Pedidos retenidos porque la dirección no pasa la validación del transportador y el paquete queda sin despacho.",
+      "tip_key": "kb_addr330_tip",
+      "tip": "Valida la dirección con el cliente y reactiva el despacho siguiendo SOP-LOG-001 para evitar la devolución automática.",
+      "phrasing_key": "kb_addr330_phrasing"
+    },
+    {
+      "id": "QA-071",
+      "severity": "MEDIUM",
+      "title_key": "kb_qa071_title",
+      "title": "Hallazgos críticos en auditoría de calidad",
+      "desc_key": "kb_qa071_desc",
+      "desc": "Llamadas y chats con hallazgos críticos (saludo, verificación de identidad o cierre) detectados por auditoría QA.",
+      "tip_key": "kb_qa071_tip",
+      "tip": "Refuerza el guion de apertura y cierre con coaching individual y verifica la mejora en la siguiente evaluación.",
+      "phrasing_key": "kb_qa071_phrasing"
     }
   ],
   "customer_faq": [
@@ -335,6 +379,38 @@
       "answer_key": "faq_returns_a",
       "answer": "Explica el plazo de retracto, la etiqueta de devolución y el ciclo de reembolso comprometido.",
       "phrasing_key": "faq_returns_phrasing"
+    },
+    {
+      "id": "order_tracking",
+      "question_key": "faq_order_q",
+      "question": "«¿Dónde está mi pedido?»",
+      "answer_key": "faq_order_a",
+      "answer": "Consulta el estado en OMS/SAP, comparte el código de rastreo y explica el siguiente hito del despacho.",
+      "phrasing_key": "faq_order_phrasing"
+    },
+    {
+      "id": "payment_methods",
+      "question_key": "faq_payment_q",
+      "question": "«Veo dos cargos por la misma compra, ¿me cobraron dos veces?»",
+      "answer_key": "faq_payment_a",
+      "answer": "Explica la diferencia entre retención temporal y cobro efectivo, verifica la pasarela y confirma el tiempo de reversión.",
+      "phrasing_key": "faq_payment_phrasing"
+    },
+    {
+      "id": "loyalty_program",
+      "question_key": "faq_loyalty_q",
+      "question": "«¿Cómo acumulo y uso los puntos del Club H&M?»",
+      "answer_key": "faq_loyalty_a",
+      "answer": "Explica la acumulación por compra, cómo canjear los puntos y cómo vincular la tarjeta digital a la cuenta.",
+      "phrasing_key": "faq_loyalty_phrasing"
+    },
+    {
+      "id": "account_access",
+      "question_key": "faq_account_q",
+      "question": "«No puedo iniciar sesión en mi cuenta de H&M.»",
+      "answer_key": "faq_account_a",
+      "answer": "Verifica el correo asociado, restablece la contraseña y confirma el acceso restaurando la sesión si hay un token vencido.",
+      "phrasing_key": "faq_account_phrasing"
     }
   ]
 }

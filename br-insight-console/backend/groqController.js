@@ -427,6 +427,15 @@ async function generateChatResponse(message, metricsData, language = "es") {
   }
 }
 
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function round(value, decimals = 0) {
+  const factor = 10 ** decimals;
+  return Math.round(value * factor) / factor;
+}
+
 function hashString(value) {
   let hash = 0;
   for (const character of String(value)) {
@@ -599,10 +608,135 @@ function buildCaseDetail(metricsData, caseId) {
   };
 }
 
+/* ------------------------------------------- revisión operativa del caso --- */
+
+// Claves i18n de la revisión local según el tipo de caso. El frontend resuelve
+// la clave con t() para mantener la revisión en el idioma activo.
+const CASE_REVIEW_FALLBACK = {
+  technical_error_403: "caseReviewFallbackTechnical",
+  app_crash: "caseReviewFallbackTechnical",
+  logistics_delay: "caseReviewFallbackLogistics",
+  shipping_address: "caseReviewFallbackLogistics",
+  payment_double_hold: "caseReviewFallbackPayment",
+  refund_pending: "caseReviewFallbackPayment",
+  qa_review: "caseReviewFallbackQuality",
+  product_inquiry: "caseReviewFallbackGeneric"
+};
+
+function caseReviewPrompt(language) {
+  return [
+    "Eres el Analista de Operaciones e Inteligencia de Negocio de BR (Building Reliability), socio BPO del cliente ancla H&M (HyM).",
+    `Redacta la revisión en ${LANGUAGE_NAMES[language] || LANGUAGE_NAMES.es}.`,
+    "Escribe una revisión operativa amplia y natural del expediente, como un supervisor humano que explica el caso a un compañero: qué está ocurriendo, por qué importa, qué se ha hecho ya y qué sigue.",
+    "No uses una plantilla rígida. Adapta la estructura al tipo de caso (técnico, logístico, financiero, calidad o producto): combina un párrafo breve con viñetas y usa hasta tres subtítulos con '### ' solo cuando aporten claridad.",
+    "Extensión libre entre 120 y 220 palabras; prioriza la claridad sin relleno.",
+    "Usa únicamente el expediente entregado (telemetría, registros, usuarios afectados, pedidos, SOP y pasos de resolución). No inventes cifras, SLA, importes ni resultados.",
+    "Cierra con una recomendación concreta y el indicador que confirmará la mejora."
+  ].join(" ");
+}
+
+function getCaseReviewFallback(caseData) {
+  return {
+    review_key: CASE_REVIEW_FALLBACK[caseData?.type] || "caseReviewFallbackGeneric",
+    source: "intelligent-fallback",
+    generated_at: new Date().toISOString()
+  };
+}
+
+async function buildCaseReview(metricsData, caseId, language = "es") {
+  const detail = buildCaseDetail(metricsData, caseId);
+  if (!detail) return null;
+  const caseData = detail.case;
+
+  if (isPlaceholderKey(process.env.GROQ_API_KEY?.trim())) {
+    console.warn("GROQ_API_KEY no está configurada; se utilizará la revisión local del caso.");
+    return { case_id: caseData.id, ...getCaseReviewFallback(caseData) };
+  }
+
+  try {
+    const review = await createChatCompletion([
+      { role: "system", content: caseReviewPrompt(languageKey(language)) },
+      { role: "user", content: `Expediente del caso:\n${JSON.stringify(caseData)}` }
+    ], { temperature: 0.5, maxTokens: 700 });
+    return {
+      case_id: caseData.id,
+      review,
+      source: "groq",
+      generated_at: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error(`No fue posible generar la revisión del caso: ${error.message}`);
+    return { case_id: caseData.id, ...getCaseReviewFallback(caseData) };
+  }
+}
+
+/* --------------------------------------- rendimiento mensual de agentes --- */
+
+const AGENT_HIGHLIGHT_KEYS = [
+  "agentHighlightCsat", "agentHighlightFcr", "agentHighlightQa",
+  "agentHighlightVolume", "agentHighlightAdherence"
+];
+const AGENT_FOCUS_KEYS = ["agentFocusAht", "agentFocusOccupancy", "agentFocusRepeat", "agentFocusCoaching"];
+
+function pickKeys(catalog, random, count) {
+  const pool = catalog.slice();
+  const picked = [];
+  while (picked.length < count && pool.length) {
+    picked.push(pool.splice(Math.floor(random() * pool.length), 1)[0]);
+  }
+  return picked;
+}
+
+function buildAgentMonthly(metricsData, agentName) {
+  const agents = metricsData?.agent_performance || [];
+  const base = agents.find((agent) => agent.name === agentName)
+    || agents[0]
+    || { name: agentName, role: "", role_key: "", aht_min: 4, csat: 4.8 };
+  const random = seededRandom(hashString(`${base.name}-monthly-review`));
+
+  const csat = round(clamp(Number(base.csat) || 4.8, 4.6, 5), 2);
+  const aht = round(clamp(Number(base.aht_min) || 4, 2.8, 5.4), 1);
+  const series = (start, amplitude, min, max, decimals) => {
+    let value = start;
+    return Array.from({ length: 4 }, () => {
+      value = clamp(value + (random() * 2 - 1) * amplitude, min, max);
+      return round(value, decimals);
+    });
+  };
+
+  return {
+    name: base.name,
+    role: base.role || "",
+    role_key: base.role_key || "",
+    period: "last_30_days",
+    weeks: [1, 2, 3, 4],
+    metrics: {
+      csat,
+      aht_min: aht,
+      fcr_pct: round(clamp(82 + random() * 13, 80, 97), 1),
+      qa_pct: round(clamp(95 + random() * 4.4, 95, 99.4), 1),
+      tickets_handled: Math.round(520 + random() * 480),
+      adherence_pct: round(clamp(91 + random() * 8, 88, 99), 1),
+      occupancy_pct: round(clamp(76 + random() * 16, 68, 94), 1),
+      repeat_contact_pct: round(clamp(3 + random() * 7, 1.5, 11), 1)
+    },
+    trend: {
+      csat: series(csat, 0.07, 4.6, 5, 2),
+      qa: series(clamp(95 + random() * 4.4, 95, 99.4), 1.1, 95, 99.4, 1),
+      aht: series(aht, 0.35, 2.8, 5.4, 1)
+    },
+    highlights: pickKeys(AGENT_HIGHLIGHT_KEYS, random, 2),
+    focus: pickKeys(AGENT_FOCUS_KEYS, random, 2),
+    generated_at: new Date().toISOString()
+  };
+}
+
 module.exports = {
   generateDiagnostic,
   generateChatResponse,
   getIntelligentFallback,
   buildCaseDetail,
+  buildCaseReview,
+  buildAgentMonthly,
   pickPriorityCase
 };
